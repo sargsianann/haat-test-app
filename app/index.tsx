@@ -1,4 +1,5 @@
 import { getMarket } from "@/lib/api";
+import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -99,7 +100,9 @@ export default function HomeScreen() {
               source={{ uri: IMAGE_BASE + item.serverImageUrl }}
               style={styles.image}
             />
-            <Text style={styles.name}>{item.name["en-US"]}</Text>
+            <BlurView intensity={30} tint="light" style={styles.nameBlur}>
+              <Text style={styles.name}>{item.name["en-US"]}</Text>
+            </BlurView>
           </TouchableOpacity>
         )}
       />
@@ -134,9 +137,6 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 8,
     borderRadius: 10,
-    backgroundColor: "#fff",
-    overflow: "hidden",
-    elevation: 2,
   },
   image: {
     height: 100,
@@ -145,7 +145,18 @@ const styles = StyleSheet.create({
   },
   name: {
     padding: 8,
-    textAlign: "center",
-    backgroundColor: "rgba(255,255,255,0.7)",
+    textAlign: "left",
+    color: "#000",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  nameBlur: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    backgroundColor: "transparent",
   },
 });
