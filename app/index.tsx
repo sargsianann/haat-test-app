@@ -3,6 +3,7 @@ import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  FlatList,
   Image,
   StatusBar,
   StyleSheet,
@@ -20,17 +21,22 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const IMAGE_BASE = "https://im-staging.haat.delivery/";
 const HEADER_HEIGHT = 60;
+const MARKET_IMAGE_HEIGHT = 160;
 
 export default function HomeScreen() {
   const [categories, setCategories] = useState([]);
+  const [marketName, setMarketName] = useState("");
+  const [marketImage, setMarketImage] = useState("");
+
   const router = useRouter();
   const insets = useSafeAreaInsets();
-
   const scrollY = useSharedValue(0);
 
   useEffect(() => {
     getMarket(4532).then((data) => {
-      setCategories(data.marketCategories);
+      setCategories(data.marketCategories || []);
+      setMarketName(data.name["en-US"]);
+      setMarketImage(data.icon?.serverImage || "");
     });
   }, []);
 
@@ -51,6 +57,7 @@ export default function HomeScreen() {
       transform: [{ translateY }],
     };
   });
+
   const headerTextAnimatedStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       scrollY.value,
@@ -58,43 +65,96 @@ export default function HomeScreen() {
       [1, 0.3, 0],
       Extrapolation.CLAMP
     );
-
     return { opacity };
   });
+
+  const marketImageAnimatedStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      scrollY.value,
+      [0, MARKET_IMAGE_HEIGHT],
+      [0, -50],
+      Extrapolation.CLAMP
+    );
+    const opacity = interpolate(
+      scrollY.value,
+      [0, MARKET_IMAGE_HEIGHT / 2, MARKET_IMAGE_HEIGHT],
+      [1, 0.6, 0],
+      Extrapolation.CLAMP
+    );
+    return {
+      transform: [{ translateY }],
+      opacity,
+    };
+  });
+
   const totalHeaderHeight = insets.top + HEADER_HEIGHT;
 
   return (
     <Animated.View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
       <Animated.View
         style={[
           styles.header,
-          {
-            paddingTop: insets.top,
-            height: totalHeaderHeight,
-          },
+          { paddingTop: insets.top, height: totalHeaderHeight },
           headerAnimatedStyle,
         ]}
       >
         <Animated.Text style={[styles.headerText, headerTextAnimatedStyle]}>
-          Available Categories
+          {marketName}
         </Animated.Text>
       </Animated.View>
+
+      {marketImage && (
+        <Animated.Image
+          source={{ uri: IMAGE_BASE + marketImage }}
+          style={[
+            styles.marketImage,
+            { top: totalHeaderHeight, position: "absolute", zIndex: 50 },
+            marketImageAnimatedStyle,
+          ]}
+        />
+      )}
       <Animated.FlatList
         data={categories}
         numColumns={2}
         keyExtractor={(item) => item.id.toString()}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
+        ListHeaderComponent={
+          <FlatList
+            data={categories}
+            horizontal
+            keyExtractor={(item) => item.id.toString()}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.carouselContainer}
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.carouselItem} onPress={() => {}}>
+                <Image
+                  source={{
+                    uri: IMAGE_BASE + item.serverImageUrl || item.smallImageUrl,
+                  }}
+                  style={styles.carouselImage}
+                />
+                <Text style={styles.carouselLabel}>
+                  {item.name?.["en-US"] || ""}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        }
         contentContainerStyle={{
-          paddingTop: totalHeaderHeight + 10,
+          paddingTop:
+            totalHeaderHeight + (marketImage ? MARKET_IMAGE_HEIGHT : 0) + 16,
           paddingHorizontal: 10,
-          paddingBottom: 24,
+          paddingBottom: 50,
         }}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
-            onPress={() => router.push(`/market/${item.id}`)}
+            onPress={() => {
+              router.push(`/market/${item.id}`);
+            }}
           >
             <Image
               source={{ uri: IMAGE_BASE + item.serverImageUrl }}
@@ -119,6 +179,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
+    top: 0,
     zIndex: 100,
     backgroundColor: "#fff",
     justifyContent: "center",
@@ -133,22 +194,23 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
+  marketImage: {
+    width: "100%",
+    height: MARKET_IMAGE_HEIGHT,
+    resizeMode: "cover",
+  },
   card: {
     flex: 1,
     margin: 8,
     borderRadius: 10,
+    backgroundColor: "#fff",
+    overflow: "hidden",
+    elevation: 2,
   },
   image: {
     height: 100,
     width: "100%",
     resizeMode: "cover",
-  },
-  name: {
-    padding: 8,
-    textAlign: "left",
-    color: "#000",
-    fontWeight: "bold",
-    fontSize: 14,
   },
   nameBlur: {
     position: "absolute",
@@ -158,5 +220,35 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 6,
     backgroundColor: "transparent",
+  },
+  name: {
+    padding: 8,
+    textAlign: "left",
+    color: "#000",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  carouselContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  carouselItem: {
+    alignItems: "center",
+    marginRight: 16,
+    width: 70,
+  },
+  carouselImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    resizeMode: "cover",
+    marginBottom: 6,
+    backgroundColor: "#eee",
+  },
+  carouselLabel: {
+    fontSize: 12,
+    textAlign: "center",
+    color: "#333",
   },
 });
