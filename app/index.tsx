@@ -1,7 +1,8 @@
+import ScrollToTopButton from "@/components/ScrollToTopButton";
 import { getMarket } from "@/lib/api";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   Image,
@@ -27,6 +28,7 @@ export default function HomeScreen() {
   const [categories, setCategories] = useState([]);
   const [marketName, setMarketName] = useState("");
   const [marketImage, setMarketImage] = useState("");
+  const flatListRef = useRef<FlatList<any>>(null);
 
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -116,6 +118,7 @@ export default function HomeScreen() {
         />
       )}
       <Animated.FlatList
+        ref={flatListRef}
         data={categories}
         numColumns={2}
         keyExtractor={(item) => item.id.toString()}
@@ -165,6 +168,11 @@ export default function HomeScreen() {
             </BlurView>
           </TouchableOpacity>
         )}
+      />
+      <ScrollToTopButton
+        onPress={() => {
+          flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+        }}
       />
     </Animated.View>
   );

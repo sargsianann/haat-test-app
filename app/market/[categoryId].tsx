@@ -1,3 +1,4 @@
+import ScrollToTopButton from "@/components/ScrollToTopButton";
 import { BlurView } from "expo-blur";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -226,6 +227,15 @@ export default function CategoryDetailScreen() {
           );
         }}
       />
+      <ScrollToTopButton
+        onPress={() => {
+          listRef.current?.scrollToLocation({
+            sectionIndex: 0,
+            itemIndex: 0,
+            animated: true,
+          });
+        }}
+      />
     </View>
   );
 }
@@ -267,7 +277,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   tabButtonActive: {
-    backgroundColor: "#333",
+    backgroundColor: "#efa1aa",
   },
   tabText: {
     fontSize: 14,
