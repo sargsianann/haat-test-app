@@ -5,9 +5,12 @@ import { StyleSheet, TouchableOpacity, ViewStyle } from "react-native";
 type Props = {
   onPress: () => void;
   style?: ViewStyle;
+  visible: boolean;
 };
 
-export default function ScrollToTopButton({ onPress, style }: Props) {
+export default function ScrollToTopButton({ onPress, style, visible }: Props) {
+  if (!visible) return null;
+
   return (
     <TouchableOpacity onPress={onPress} style={[styles.button, style]}>
       <Ionicons name="arrow-up" size={20} color="#fff" />

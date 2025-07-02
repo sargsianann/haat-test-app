@@ -1,8 +1,9 @@
 import ScrollToTopButton from "@/components/ScrollToTopButton";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { getMarket } from "@/lib/api";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
@@ -28,7 +29,7 @@ export default function HomeScreen() {
   const [categories, setCategories] = useState([]);
   const [marketName, setMarketName] = useState("");
   const [marketImage, setMarketImage] = useState("");
-  const flatListRef = useRef<FlatList<any>>(null);
+  const { scrollRef, showScrollTop, handleScroll } = useScrollToTop();
 
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -118,11 +119,11 @@ export default function HomeScreen() {
         />
       )}
       <Animated.FlatList
-        ref={flatListRef}
+        ref={scrollRef}
         data={categories}
         numColumns={2}
         keyExtractor={(item) => item.id.toString()}
-        onScroll={scrollHandler}
+        onScroll={handleScroll}
         scrollEventThrottle={16}
         ListHeaderComponent={
           <FlatList
@@ -170,8 +171,9 @@ export default function HomeScreen() {
         )}
       />
       <ScrollToTopButton
+        visible={showScrollTop}
         onPress={() => {
-          flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+          scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
         }}
       />
     </Animated.View>

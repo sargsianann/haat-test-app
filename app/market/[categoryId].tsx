@@ -1,4 +1,5 @@
 import ScrollToTopButton from "@/components/ScrollToTopButton";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { BlurView } from "expo-blur";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -33,6 +34,7 @@ export default function CategoryDetailScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const insets = useSafeAreaInsets();
   const listRef = useRef<SectionList<any>>(null);
+  const { showScrollTop, handleScroll } = useScrollToTop();
 
   const [data, setData] = useState<any>(null);
   const [sectionsData, setSectionsData] = useState<SectionType[]>([]);
@@ -99,6 +101,13 @@ export default function CategoryDetailScreen() {
     loadInitialData();
   }, [categoryId]);
 
+  const scrollToLocation = () => {
+    listRef.current?.scrollToLocation({
+      sectionIndex: 0,
+      itemIndex: 0,
+      animated: true,
+    });
+  };
   const loadMore = (sectionId: number) => {
     setSectionsData((prev) =>
       prev.map((section) => {
@@ -189,6 +198,7 @@ export default function CategoryDetailScreen() {
         initialNumToRender={20}
         maxToRenderPerBatch={20}
         windowSize={10}
+        onScroll={handleScroll}
         viewabilityConfig={{
           itemVisiblePercentThreshold: 50,
           waitForInteraction: false,
@@ -227,15 +237,7 @@ export default function CategoryDetailScreen() {
           );
         }}
       />
-      <ScrollToTopButton
-        onPress={() => {
-          listRef.current?.scrollToLocation({
-            sectionIndex: 0,
-            itemIndex: 0,
-            animated: true,
-          });
-        }}
-      />
+      <ScrollToTopButton visible={showScrollTop} onPress={scrollToLocation} />
     </View>
   );
 }
