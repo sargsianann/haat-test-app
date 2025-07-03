@@ -1,9 +1,11 @@
-import ScrollToTopButton from "@/components/ScrollToTopButton";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { getMarket } from "@/lib/api";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FlatList,
   Image,
@@ -15,7 +17,6 @@ import {
 import Animated, {
   Extrapolation,
   interpolate,
-  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
@@ -25,11 +26,19 @@ const IMAGE_BASE = "https://im-staging.haat.delivery/";
 const HEADER_HEIGHT = 60;
 const MARKET_IMAGE_HEIGHT = 160;
 
+type Category = {
+  id: number;
+  name: Record<string, string>;
+  serverImageUrl: string;
+  smallImageUrl?: string;
+};
+
 export default function HomeScreen() {
-  const [categories, setCategories] = useState([]);
-  const [marketName, setMarketName] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [marketName, setMarketName] = useState<Record<string, string>>({});
   const [marketImage, setMarketImage] = useState("");
   const { scrollRef, showScrollTop, handleScroll } = useScrollToTop();
+  const { i18n } = useTranslation();
 
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -38,16 +47,10 @@ export default function HomeScreen() {
   useEffect(() => {
     getMarket(4532).then((data) => {
       setCategories(data.marketCategories || []);
-      setMarketName(data.name["en-US"]);
+      setMarketName(data.name);
       setMarketImage(data.icon?.serverImage || "");
     });
   }, []);
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
 
   const headerAnimatedStyle = useAnimatedStyle(() => {
     const translateY = interpolate(
@@ -104,10 +107,10 @@ export default function HomeScreen() {
         ]}
       >
         <Animated.Text style={[styles.headerText, headerTextAnimatedStyle]}>
-          {marketName}
+          {marketName[i18n.language]}
         </Animated.Text>
+        <LanguageSwitcher />
       </Animated.View>
-
       {marketImage && (
         <Animated.Image
           source={{ uri: IMAGE_BASE + marketImage }}
@@ -141,7 +144,7 @@ export default function HomeScreen() {
                   style={styles.carouselImage}
                 />
                 <Text style={styles.carouselLabel}>
-                  {item.name?.["en-US"] || ""}
+                  {item.name[i18n.language] || ""}
                 </Text>
               </TouchableOpacity>
             )}
@@ -165,7 +168,7 @@ export default function HomeScreen() {
               style={styles.image}
             />
             <BlurView intensity={30} tint="light" style={styles.nameBlur}>
-              <Text style={styles.name}>{item.name["en-US"]}</Text>
+              <Text style={styles.name}>{item.name[i18n.language]}</Text>
             </BlurView>
           </TouchableOpacity>
         )}

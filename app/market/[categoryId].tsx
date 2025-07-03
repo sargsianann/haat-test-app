@@ -1,8 +1,9 @@
-import ScrollToTopButton from "@/components/ScrollToTopButton";
+import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { BlurView } from "expo-blur";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   FlatList,
@@ -35,6 +36,7 @@ export default function CategoryDetailScreen() {
   const insets = useSafeAreaInsets();
   const listRef = useRef<SectionList<any>>(null);
   const { showScrollTop, handleScroll } = useScrollToTop();
+  const { i18n, t } = useTranslation();
 
   const [data, setData] = useState<any>(null);
   const [sectionsData, setSectionsData] = useState<SectionType[]>([]);
@@ -79,7 +81,7 @@ export default function CategoryDetailScreen() {
             const allProducts = sub.products ?? [];
             return {
               id: sub.id,
-              title: sub.name?.["en-US"] ?? "",
+              title: sub.name?.[i18n.language] ?? "",
               allProducts,
               data: allProducts.slice(0, PAGE_SIZE),
               page: 1,
@@ -143,7 +145,7 @@ export default function CategoryDetailScreen() {
         ]}
       >
         <Text style={styles.headerTitle}>
-          {data.name?.["en-US"] ?? "Category"}
+          {data.name?.[i18n.language] ?? "Category"}
         </Text>
       </BlurView>
 
@@ -217,7 +219,7 @@ export default function CategoryDetailScreen() {
           <View style={styles.itemRow}>
             <BlurView intensity={40} tint="light" style={styles.itemCard}>
               <Text style={styles.itemName}>
-                {item.name?.["en-US"] ?? "Unnamed item"}
+                {item.name?.[i18n.language] ?? "Unnamed item"}
               </Text>
             </BlurView>
           </View>
@@ -231,7 +233,7 @@ export default function CategoryDetailScreen() {
               {current.loadingMore ? (
                 <ActivityIndicator size="small" color="#007AFF" />
               ) : (
-                <Text style={styles.loadMoreText}>Loading more...</Text>
+                <Text style={styles.loadMoreText}>{t("loadingMore")}</Text>
               )}
             </View>
           );
