@@ -10,6 +10,7 @@ type Props = {
 export default function Header({ title, paddingTop, height }: Props) {
   return (
     <BlurView
+      testID="header-blur"
       intensity={50}
       tint="light"
       style={[styles.header, { paddingTop, height }]}

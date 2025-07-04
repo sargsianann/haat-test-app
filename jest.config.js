@@ -1,10 +1,13 @@
 module.exports = {
-  preset: "jest-expo",
-  rootDir: ".",
-  moduleDirectories: ["node_modules", "<rootDir>"],
+  preset: "react-native",
   setupFilesAfterEnv: ["@testing-library/jest-native/extend-expect"],
+  transform: {
+    "^.+\\.[jt]sx?$": "babel-jest",
+  },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
-  testPathIgnorePatterns: ["/node_modules/", "/dist/"],
+  transformIgnorePatterns: [
+    "node_modules/(?!(expo-blur|expo-linear-gradient|@react-native|react-native|@expo|@unimodules)/)",
+  ],
 };
