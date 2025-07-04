@@ -1,4 +1,5 @@
 export type Category = {
+  marketSubcategories: never[];
   id: number;
   name: Record<string, string>;
   serverImageUrl: string;

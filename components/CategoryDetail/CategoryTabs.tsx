@@ -1,40 +1,31 @@
-import React from "react";
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  ViewStyle,
-} from "react-native";
+import { FlatList, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 type Props = {
-  tabs: { id: number; title: string }[];
-  selectedTabId: number | null;
-  onTabPress: (id: number, index: number) => void;
-  style?: ViewStyle;
+  categories: { id: number; title: string }[];
+  selectedId: number | null;
+  onSelect: (id: number) => void;
 };
 
 export default function CategoryTabs({
-  tabs,
-  selectedTabId,
-  onTabPress,
-  style,
+  categories,
+  selectedId,
+  onSelect,
 }: Props) {
   return (
     <FlatList
       horizontal
-      data={tabs}
+      data={categories}
       keyExtractor={(item) => item.id.toString()}
-      contentContainerStyle={[styles.tabsContainer, style]}
       showsHorizontalScrollIndicator={false}
-      renderItem={({ item, index }) => {
-        const active = selectedTabId === item.id;
+      contentContainerStyle={styles.container}
+      renderItem={({ item }) => {
+        const isActive = item.id === selectedId;
         return (
           <TouchableOpacity
-            onPress={() => onTabPress(item.id, index)}
-            style={[styles.tabButton, active && styles.tabButtonActive]}
+            onPress={() => onSelect(item.id)}
+            style={[styles.tabButton, isActive && styles.tabButtonActive]}
           >
-            <Text style={[styles.tabText, active && styles.tabTextActive]}>
+            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
               {item.title}
             </Text>
           </TouchableOpacity>
@@ -45,10 +36,7 @@ export default function CategoryTabs({
 }
 
 const styles = StyleSheet.create({
-  tabsContainer: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
+  container: { paddingHorizontal: 16, gap: 8 },
   tabButton: {
     paddingHorizontal: 14,
     justifyContent: "center",

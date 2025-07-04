@@ -17,6 +17,7 @@ export type CategoryResponse = {
 
 export const getMarket = async (id: number) => {
   const res = await axios.get(`${BASE_URL}/markets/${id}`);
+
   return res.data;
 };
 export async function getCategoryDetail(

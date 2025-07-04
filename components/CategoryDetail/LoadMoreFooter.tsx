@@ -1,32 +1,30 @@
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 type Props = {
-  loadingMore: boolean;
-  loadingText: string;
+  loading: boolean;
 };
 
-export default function LoadMoreFooter({ loadingMore, loadingText }: Props) {
-  if (!loadingMore) {
-    return (
-      <View style={styles.loadMoreFooter}>
-        <Text style={styles.loadMoreText}>{loadingText}</Text>
-      </View>
-    );
-  }
+export default function LoadMoreFooter({ loading }: Props) {
+  const { t } = useTranslation();
 
   return (
-    <View style={styles.loadMoreFooter}>
-      <ActivityIndicator size="small" color="#007AFF" />
+    <View style={styles.footer}>
+      {loading ? (
+        <ActivityIndicator size="small" color="#007AFF" />
+      ) : (
+        <Text style={styles.text}>{t("loadingMore")}</Text>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  loadMoreFooter: {
+  footer: {
     paddingVertical: 16,
     alignItems: "center",
   },
-  loadMoreText: {
+  text: {
     color: "#007AFF",
     fontWeight: "500",
   },

@@ -1,39 +1,47 @@
+import { IMAGE_BASE } from "@/constants";
 import { BlurView } from "expo-blur";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 type Props = {
-  name: string;
+  product: any;
+  language: string;
 };
 
-export default function ProductCard({ name }: Props) {
+export default function ProductCard({ product, language }: Props) {
+  const imageUrl = product.productImages?.[0]?.serverImageUrl;
+
   return (
-    <View style={styles.itemRow}>
-      <BlurView intensity={40} tint="light" style={styles.itemCard}>
-        <Text style={styles.itemName}>{name}</Text>
+    <View style={styles.wrapper}>
+      <BlurView intensity={40} tint="light" style={styles.card}>
+        {imageUrl && (
+          <Image
+            source={{ uri: IMAGE_BASE + imageUrl }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        )}
+        <Text style={styles.name}>{product.name?.[language] ?? "Unnamed"}</Text>
       </BlurView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  itemRow: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  itemCard: {
-    flex: 1,
-    height: 100,
+  wrapper: { flex: 1, marginHorizontal: 4 },
+  card: {
     borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 12,
     overflow: "hidden",
     backgroundColor: "#f2f2f2",
+    alignItems: "center",
+    padding: 12,
   },
-  itemName: {
+  image: {
+    width: "100%",
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  name: {
     fontSize: 14,
     fontWeight: "500",
     color: "#000",

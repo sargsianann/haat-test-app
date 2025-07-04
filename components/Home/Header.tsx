@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   headerText: {
+    top: 25,
     fontSize: 20,
     fontWeight: "bold",
   },
