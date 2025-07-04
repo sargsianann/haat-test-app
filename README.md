@@ -1,50 +1,100 @@
-# Welcome to your Expo app 👋
+# 🛒 Haat Delivery Test Task — React Native (Expo + Expo Router)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This project is a simplified version of a food delivery app, built using **React Native**, **Expo**, and **expo-router**, demonstrating:
 
-## Get started
+- Category listing
+- Market detail navigation
+- Section-based product display with advanced scroll behavior
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## 🚀 Setup Instructions
 
 ```bash
-npm run reset-project
+# 1. Clone the repository
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+
+# 2. Install dependencies
+npm install
+# or
+yarn
+
+# 3. Run the Expo app
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+> Make sure you have Expo CLI installed globally (`npm install -g expo-cli`) and a simulator or Expo Go app to test.
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 📁 Folder Structure (Simplified)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```
+.
+├── app/
+│   ├── index.tsx               # Home screen: Market categories
+│   └── market/[categoryId].tsx # Category detail page with SectionList
+├── components/                 # UI components
+├── lib/api.ts                 # API helpers
+├── constants/                 # Image base and reusable constants
+└── README.md
+```
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## 💡 Features & Implementation Notes
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### ✅ Category List (Home Screen)
+
+- Fetched using `GET /api/markets/4532`
+- Displayed as a 2-column grid with category images
+- Scroll-based header animation (hides on scroll using `react-native-reanimated`)
+- Tapping a category navigates to its detail screen
+
+### ✅ Category Detail Screen
+
+- Fetched using `GET /api/markets/4532/categories/:categoryId`
+- Subcategories rendered as `SectionList` with sticky headers
+- Horizontal scrollable tab bar syncs with list scrolling
+- Tapping a tab scrolls to its respective section with precise offset
+- Layout respects the iOS status bar using `react-native-safe-area-context`
+- Product grid with 2 items per row and blurred name background using `expo-blur`
+
+---
+
+## 🔁 Scroll Behavior (Advanced UX)
+
+- Implemented `onViewableItemsChanged` to track current section in view
+- Used `scrollToLocation` with `viewOffset` to avoid clipping under sticky headers
+- Used `InteractionManager.runAfterInteractions` to delay scroll until list layout is ready
+
+---
+
+## 🧪 How to Test
+
+1. Run the app using `npx expo start`
+2. Scroll down on the **home screen** — header should smoothly hide
+3. Tap a category → navigates to category detail
+4. Tap on any subcategory tab → scrolls to that section in the product list
+5. Scroll up/down → tabs update to reflect current visible section
+
+---
+
+## 🚧 Challenges & Solutions
+
+| Challenge                                                     | Solution                                                                                            |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| SectionList `scrollToLocation` fails if list not yet measured | Used `InteractionManager.runAfterInteractions` and `recordInteraction()` to ensure layout readiness |
+| Products clipped under header                                 | Applied `viewOffset` equal to header height                                                         |
+| Header animation conflicts with safe area                     | Used `react-native-safe-area-context` to calculate proper padding                                   |
+
+---
+
+## 📦 Dependencies
+
+- **expo** (SDK 50+)
+- **react-native-reanimated**
+- **expo-router**
+- **expo-blur**
+- **react-native-safe-area-context**
