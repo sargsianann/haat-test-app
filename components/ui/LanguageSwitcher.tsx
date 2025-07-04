@@ -1,5 +1,5 @@
-import i18n from "@/i18n";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FlatList,
   Modal,
@@ -18,6 +18,7 @@ const LANGUAGES = [
 
 export default function LanguageSwitcher() {
   const [modalVisible, setModalVisible] = useState(false);
+  const { t, i18n } = useTranslation();
 
   const changeLanguage = (code: string) => {
     i18n.changeLanguage(code);
@@ -30,7 +31,7 @@ export default function LanguageSwitcher() {
         style={styles.languageButton}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={styles.languageButtonText}>Language</Text>
+        <Text style={styles.languageButtonText}>{t("language")}</Text>
       </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent animationType="fade">
@@ -40,7 +41,7 @@ export default function LanguageSwitcher() {
           activeOpacity={1}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Language</Text>
+            <Text style={styles.modalTitle}>{t("selectLanguage")}</Text>
             <FlatList
               data={LANGUAGES}
               keyExtractor={(item) => item.code}
