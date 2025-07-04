@@ -1,198 +1,211 @@
-import Header from "@/components/CategoryDetail/Header";
-import LoadMoreFooter from "@/components/CategoryDetail/LoadMoreFooter";
-import ProductCard from "@/components/CategoryDetail/ProductCard";
-import Tabs from "@/components/CategoryDetail/Tabs";
-import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
-import { useScrollToTop } from "@/hooks/useScrollToTop";
-import { getCategoryDetail } from "@/lib/api";
-import type { Product, SectionType } from "@/types";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  SectionList,
-  StyleSheet,
-  Text,
-  View,
-  ViewToken,
-} from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import CategoryTabs from "@/components/CategoryDetail/CategoryTabs";
+import CategoryHeader from "@/components/CategoryDetail/Header";
+import ProductScrollView from "@/components/CategoryDetail/ProductSectionList";
+import SubcategoryTabs from "@/components/CategoryDetail/SubcategoryTabs";
+import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
+import { getMarket } from "@/lib/api";
+import { Category } from "@/types";
+
+const chunkArray = (arr: any[], size: number) => {
+  const result = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+};
 const PAGE_SIZE = 10;
 
 export default function CategoryDetailScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const insets = useSafeAreaInsets();
-  const listRef = useRef<SectionList<Product>>(null);
-  const { showScrollTop, handleScroll } = useScrollToTop();
   const { i18n, t } = useTranslation();
+  const { showScrollTop, handleScroll } = useScrollToTop();
 
-  const [data, setData] = useState<any>(null);
-  const [sectionsData, setSectionsData] = useState<SectionType[]>([]);
+  const categoryListRef = useRef<FlatList<any>>(null);
+  null;
+  const subcategoryListRef = useRef<FlatList<any>>(null);
+  null;
+  const subcategoryLayouts = useRef<Record<number, number>>({});
+
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null
+  );
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [visibleSubcategoryCount, setVisibleSubcategoryCount] = useState(1);
+  const [visibleSubcategoryIndex, setVisibleSubcategoryIndex] = useState(0);
+  const [marketName, setMarketName] = useState("");
   const [loading, setLoading] = useState(true);
-  const [selectedTabId, setSelectedTabId] = useState<number | null>(null);
 
   const headerHeight = 60 + insets.top;
-  const tabBarHeight = 56;
-  const totalOffset = headerHeight + tabBarHeight;
-
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      const topSection = viewableItems.find((v) => v.section && v.index === 0);
-      if (topSection?.section?.id) {
-        setSelectedTabId(topSection.section.id);
-      }
-
-      viewableItems.forEach((item) => {
-        if (!item.section) return;
-        const section = item.section as SectionType;
-        if (
-          section.hasMore &&
-          !section.loadingMore &&
-          item.index === section.data.length - 1
-        ) {
-          loadMore(section.id);
-        }
-      });
-    }
-  ).current;
+  const visibleSubcategories = subcategories.slice(0, visibleSubcategoryCount);
 
   useEffect(() => {
-    const loadInitialData = async () => {
-      setLoading(true);
+    const loadData = async () => {
       try {
-        const { categoryData, sections } = await getCategoryDetail(
-          categoryId!,
-          i18n.language,
-          PAGE_SIZE
-        );
+        setLoading(true);
+        const data = await getMarket(4532);
+        setMarketName(data.name?.[i18n.language] ?? "");
 
-        setData(categoryData);
-        setSectionsData(sections);
-        if (sections[0]?.id) setSelectedTabId(sections[0].id);
-      } catch (err) {
-        console.error(err);
+        const cats = (data.marketCategories ?? []).map((cat: Category) => ({
+          id: cat.id,
+          title: cat.name?.[i18n.language] ?? "",
+          subcategories: cat.marketSubcategories ?? [],
+        }));
+
+        setCategories(cats);
+        const initialCategoryId = Number(categoryId) || cats[0]?.id || null;
+        setSelectedCategoryId(initialCategoryId);
+
+        requestAnimationFrame(() => {
+          const categoryIndex = cats.findIndex(
+            (c) => c.id === initialCategoryId
+          );
+          if (categoryIndex >= 0) {
+            categoryListRef.current?.scrollToIndex({
+              index: categoryIndex,
+              viewPosition: 0.5,
+              animated: true,
+            });
+          }
+        });
+      } catch (e) {
+        console.error("Failed to load market:", e);
       } finally {
         setLoading(false);
       }
     };
 
-    loadInitialData();
+    loadData();
   }, [categoryId]);
 
-  const scrollToLocation = () => {
-    listRef.current?.scrollToLocation({
-      sectionIndex: 0,
-      itemIndex: 0,
-      animated: true,
+  useEffect(() => {
+    if (!selectedCategoryId) return;
+
+    const category = categories.find((c) => c.id === selectedCategoryId);
+    if (!category) return;
+
+    const subs = (category.subcategories ?? []).map((subcat: any) => {
+      const allProducts = subcat.products ?? [];
+      return {
+        id: subcat.id,
+        title: subcat.name?.[i18n.language] ?? "",
+        products: allProducts,
+        data: chunkArray(allProducts.slice(0, PAGE_SIZE), 2),
+        page: 1,
+        hasMore: allProducts.length > PAGE_SIZE,
+      };
     });
-  };
 
-  const loadMore = (sectionId: number) => {
-    setSectionsData((prev) =>
-      prev.map((section) => {
-        if (section.id !== sectionId || !section.hasMore || section.loadingMore)
-          return section;
+    setSubcategories(subs);
+    setVisibleSubcategoryCount(1);
+  }, [selectedCategoryId, categories]);
 
-        const nextPage = section.page + 1;
-        const nextData = section.allProducts.slice(0, nextPage * PAGE_SIZE);
-
+  const loadMoreProducts = (subcatId: number) => {
+    setSubcategories((prev) =>
+      prev.map((subcat) => {
+        if (subcat.id !== subcatId) return subcat;
+        const nextPage = subcat.page + 1;
+        const nextData = chunkArray(
+          subcat.products.slice(0, nextPage * PAGE_SIZE),
+          2
+        );
         return {
-          ...section,
-          data: nextData,
+          ...subcat,
           page: nextPage,
-          hasMore: nextData.length < section.allProducts.length,
-          loadingMore: false,
+          data: nextData,
+          hasMore: nextData.length < subcat.products.length,
         };
       })
     );
   };
 
-  const handleTabPress = (id: number, index: number) => {
-    setSelectedTabId(id);
-    listRef.current?.scrollToLocation({
-      sectionIndex: index,
-      itemIndex: 0,
-      viewPosition: 0,
-      viewOffset: totalOffset,
-      animated: true,
-    });
+  const scrollToSubcategory = (id: number) => {
+    const index = subcategories.findIndex((s) => s.id === id);
+    if (index >= 0) {
+      setVisibleSubcategoryCount(index + 1);
+    }
   };
 
-  if (loading || !data) {
-    return <ActivityIndicator style={{ flex: 1 }} />;
-  }
+  const onEndReached = () => {
+    const current = subcategories[visibleSubcategoryCount - 1];
+    if (!current) return;
+
+    if (current.hasMore) {
+      loadMoreProducts(current.id);
+    } else if (visibleSubcategoryCount < subcategories.length) {
+      setVisibleSubcategoryCount(visibleSubcategoryCount + 1);
+    }
+  };
+
+  if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
+
   return (
     <View style={styles.container}>
-      <Header
-        title={data.name?.[i18n.language] ?? "Category"}
+      <CategoryHeader
+        title={marketName}
         paddingTop={insets.top}
         height={headerHeight}
       />
 
-      <Tabs
-        sections={sectionsData}
-        selectedTabId={selectedTabId}
-        onTabPress={handleTabPress}
-        top={headerHeight}
-      />
+      <View style={[styles.tabsWrapper, { top: 55 + insets.top }]}>
+        <CategoryTabs
+          categories={categories}
+          selectedId={selectedCategoryId}
+          onSelect={setSelectedCategoryId}
+        />
+      </View>
 
-      <SectionList
-        ref={listRef}
-        sections={sectionsData.map(({ allProducts, ...rest }) => rest)}
-        keyExtractor={(item) => item.id.toString()}
-        stickySectionHeadersEnabled={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        initialNumToRender={20}
-        maxToRenderPerBatch={20}
-        windowSize={10}
-        onScroll={handleScroll}
-        viewabilityConfig={{
-          itemVisiblePercentThreshold: 50,
-          waitForInteraction: false,
-          minimumViewTime: 100,
-        }}
-        contentContainerStyle={{
-          paddingTop: totalOffset + 8,
-          paddingBottom: 100,
-        }}
-        renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <ProductCard name={item.name?.[i18n.language] ?? "Unnamed item"} />
-        )}
-        renderSectionFooter={({ section }) => {
-          const current = sectionsData.find((s) => s.id === section.id);
-          if (!current?.hasMore) return null;
-
-          return (
-            <LoadMoreFooter
-              loadingMore={current.loadingMore ?? false}
-              loadingText={t("loadingMore")}
-            />
-          );
-        }}
+      <View style={[styles.subTabsWrapper, { top: 55 + 56 + insets.top }]}>
+        <SubcategoryTabs
+          subcategories={subcategories}
+          activeIndex={visibleSubcategoryIndex}
+          onSelect={scrollToSubcategory}
+        />
+      </View>
+      <ProductScrollView
+        headerHeight={headerHeight}
+        visibleSubcategories={visibleSubcategories}
+        subcategoryLayouts={subcategoryLayouts}
+        visibleSubcategoryIndex={visibleSubcategoryIndex}
+        setVisibleSubcategoryIndex={setVisibleSubcategoryIndex}
+        onEndReached={onEndReached}
+        language={i18n.language}
+        handleScroll={handleScroll}
+        subcategoryListRef={subcategoryListRef}
+        hasMore={subcategories[visibleSubcategoryCount - 1]?.hasMore}
       />
-      <ScrollToTopButton visible={showScrollTop} onPress={scrollToLocation} />
+      <ScrollToTopButton
+        visible={showScrollTop}
+        onPress={() => setVisibleSubcategoryCount(1)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-
-  sectionHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+  tabsWrapper: {
+    position: "absolute",
+    width: "100%",
+    paddingVertical: 8,
     backgroundColor: "#fff",
+    zIndex: 11,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
+  subTabsWrapper: {
+    position: "absolute",
+    width: "100%",
+    paddingVertical: 6,
+    backgroundColor: "#fff",
+    zIndex: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
   },
 });
