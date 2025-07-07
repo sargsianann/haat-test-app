@@ -151,6 +151,22 @@ export default function CategoryDetailScreen() {
       loadMoreProducts(current.id);
     } else if (visibleSubcategoryCount < subcategories.length) {
       setVisibleSubcategoryCount(visibleSubcategoryCount + 1);
+    } else {
+      const currentCategoryIndex = categories.findIndex(
+        (c) => c.id === selectedCategoryId
+      );
+      const nextCategory = categories[currentCategoryIndex + 1];
+      if (nextCategory) {
+        setSelectedCategoryId(nextCategory.id);
+
+        requestAnimationFrame(() => {
+          categoryListRef.current?.scrollToIndex({
+            index: currentCategoryIndex + 1,
+            viewPosition: 0.5,
+            animated: true,
+          });
+        });
+      }
     }
   };
 
