@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 type Props = {
@@ -11,13 +12,38 @@ export default function CategoryTabs({
   selectedId,
   onSelect,
 }: Props) {
+  const listRef = useRef<FlatList>(null);
+
+  useEffect(() => {
+    if (!selectedId || categories.length === 0) return;
+
+    const index = categories.findIndex((c) => c.id === selectedId);
+    if (index >= 0 && listRef.current) {
+      try {
+        listRef.current.scrollToIndex({
+          index,
+          viewPosition: 0.5,
+          animated: true,
+        });
+      } catch (err) {
+        console.warn("scrollToIndex failed in CategoryTabs:", err);
+      }
+    }
+  }, [selectedId, categories]);
+
   return (
     <FlatList
+      ref={listRef}
       horizontal
       data={categories}
       keyExtractor={(item) => item.id.toString()}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
+      getItemLayout={(_, index) => ({
+        length: 100,
+        offset: 100 * index,
+        index,
+      })}
       renderItem={({ item }) => {
         const isActive = item.id === selectedId;
         return (

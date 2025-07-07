@@ -20,18 +20,17 @@ const chunkArray = (arr: any[], size: number) => {
   }
   return result;
 };
+
 const PAGE_SIZE = 10;
 
 export default function CategoryDetailScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const insets = useSafeAreaInsets();
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
   const { showScrollTop, handleScroll } = useScrollToTop();
 
   const categoryListRef = useRef<FlatList<any>>(null);
-  null;
   const subcategoryListRef = useRef<FlatList<any>>(null);
-  null;
   const subcategoryLayouts = useRef<Record<number, number>>({});
 
   const [categories, setCategories] = useState<any[]>([]);
@@ -106,6 +105,7 @@ export default function CategoryDetailScreen() {
 
     setSubcategories(subs);
     setVisibleSubcategoryCount(1);
+    setVisibleSubcategoryIndex(0);
   }, [selectedCategoryId, categories]);
 
   const loadMoreProducts = (subcatId: number) => {
@@ -130,7 +130,16 @@ export default function CategoryDetailScreen() {
   const scrollToSubcategory = (id: number) => {
     const index = subcategories.findIndex((s) => s.id === id);
     if (index >= 0) {
+      setVisibleSubcategoryIndex(index);
       setVisibleSubcategoryCount(index + 1);
+
+      requestAnimationFrame(() => {
+        subcategoryListRef.current?.scrollToIndex({
+          index,
+          viewPosition: 0.5,
+          animated: true,
+        });
+      });
     }
   };
 
@@ -182,9 +191,21 @@ export default function CategoryDetailScreen() {
         subcategoryListRef={subcategoryListRef}
         hasMore={subcategories[visibleSubcategoryCount - 1]?.hasMore}
       />
+
       <ScrollToTopButton
         visible={showScrollTop}
-        onPress={() => setVisibleSubcategoryCount(1)}
+        onPress={() => {
+          setVisibleSubcategoryCount(1);
+          setVisibleSubcategoryIndex(0);
+
+          requestAnimationFrame(() => {
+            subcategoryListRef.current?.scrollToIndex({
+              index: 0,
+              viewPosition: 0.5,
+              animated: true,
+            });
+          });
+        }}
       />
     </View>
   );
