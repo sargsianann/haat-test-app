@@ -12,8 +12,8 @@ This project is a simplified version of a food delivery app, built using **React
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git clone https:/https://github.com/sargsianann/haat-test-app
+cd haat-test-app
 
 # 2. Install dependencies
 npm install
